@@ -6,7 +6,7 @@ import AudioListItem from '../component/AudioListItem';
 import Screen from '../component/Screen';
 import OptionModal from '../component/OptionModal';
 import { Audio } from 'expo-av';
-import { play, pause, resume } from '../misc/audioController'
+import { play, pause, resume, playAnother } from '../misc/audioController'
 
 
 class AudioList extends Component {
@@ -30,6 +30,7 @@ class AudioList extends Component {
   handleAudioPress = async audio => {
     const {soundObj, playbackObj, currentAudio, updateState} = this.context;
 
+    //play
     if(soundObj === null){
       const playbackObj = new Audio.Sound();
       const status = await play(playbackObj, audio.uri);
@@ -41,18 +42,29 @@ class AudioList extends Component {
       })
     }
 
-    if(soundObj.isLoaded && soundObj.isPlaying){
+    //pause
+    if(soundObj.isLoaded && soundObj.isPlaying && currentAudio.id === audio.id){
       const status = await pause(playbackObj);
       return updateState(this.context, {
         soundObj: status,
       })
     }
 
+    //resume
     if(soundObj.isLoaded && !soundObj.isPlaying && currentAudio.id === audio.id){
       const status = await resume(playbackObj);
       return updateState(this.context, {
         soundObj: status,
       })
+    }
+
+    //playAnother
+    if (soundObj.isLoaded && currentAudio.id !== audio.id ){
+      const status = await  playAnother(playbackObj, audio.uri);
+      return updateState(this.context, {
+        soundObj: status,
+        currentAudio: audio
+      });
     }
   }
 
@@ -72,9 +84,6 @@ class AudioList extends Component {
     super(props);
     this.state = {
       optionModalVisibility: false,
-      // playbackObj: null,
-      // soundObj: null,
-      // currentAudio: {},
     };
     
     this.currentItem = {};

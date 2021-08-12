@@ -30,3 +30,13 @@ export const resume = async (playbackObj) => {
 }
 
 //play another audio
+
+export const playAnother = async (playbackObj, uri) => {
+    try {
+        await playbackObj.stopAsync();
+        await playbackObj.unloadAsync();
+        return await play(playbackObj, uri);
+    } catch (error) {
+        console.log('error in another method', error.messaage)
+    }
+}
