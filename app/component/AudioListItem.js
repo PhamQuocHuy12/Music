@@ -11,14 +11,26 @@ const durationTranform =(duration) => {
 
 }
 
-const AudioListItem = ({title, duration, onOptionPress, onAudioPress}) => {
+const renderIcon = isPlaying => {
+    if(isPlaying){
+        return <Entypo name='controller-paus' size={24} color={color.ACTIVE_FONT}/>
+    }
+    return <Entypo name='controller-play' size={24} color={color.ACTIVE_FONT}/>
+}
+
+const AudioListItem = ({title, duration, onOptionPress, onAudioPress, isPlaying, isActive}) => {
     return (
         <>
             <View style={styles.container}>
                 <TouchableWithoutFeedback onPress ={onAudioPress}>
                     <View style={styles.leftContainer}>
-                        <View style={styles.thumbnail}>
-                            <Text style={styles.thumbnailText}>{getThumbnailText(title)}</Text>
+                        <View style={[styles.thumbnail, {backgroundColor: isActive? color.ACTIVE_BG : color.FONT_LIGHT}]}>
+                            <Text style={styles.thumbnailText}>
+                                {isActive ? 
+                                renderIcon(isPlaying) 
+                                : 
+                                getThumbnailText(title)}
+                            </Text>
                         </View>
                         <View style={styles.titleContainer}>
                             <Text numberOfLines={1} style={styles.title}>{title}</Text>

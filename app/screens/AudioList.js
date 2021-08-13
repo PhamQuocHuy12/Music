@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableHighlightBase } from 'react-native';
 import { AudioContext } from '../context/AudioProvider'
 import {LayoutProvider, RecyclerListView} from 'recyclerlistview'
 import AudioListItem from '../component/AudioListItem';
@@ -25,21 +25,32 @@ class AudioList extends Component {
     
   })
 
-  
+  onPlaybackStatusUpdate = playbackStatus => {
+    if(playbackStatus.isLoaded && playbackStatus.isPlaying){
+      this.context.updateState(this.context, {
+        playbackDuration: playbackStatus.durationMillis,
+        playbackPosition: playbackStatus.positionMillis,
+      })
+    }
+  }
 
   handleAudioPress = async audio => {
-    const {soundObj, playbackObj, currentAudio, updateState} = this.context;
+    const {soundObj, playbackObj, currentAudio, updateState, audioFiles} = this.context;
 
     //play
     if(soundObj === null){
       const playbackObj = new Audio.Sound();
       const status = await play(playbackObj, audio.uri);
+      const index = audioFiles.indexOf(audio);
 
-      return updateState(this.context, {
+      updateState(this.context, {
         playbackObj: playbackObj, 
         soundObj: status,
-        currentAudio: audio
-      })
+        currentAudio: audio,
+        isPlaying:true,
+        currentAudioIndex: index,
+      });
+      playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)
     }
 
     //pause
@@ -47,6 +58,7 @@ class AudioList extends Component {
       const status = await pause(playbackObj);
       return updateState(this.context, {
         soundObj: status,
+        isPlaying: false,
       })
     }
 
@@ -55,24 +67,31 @@ class AudioList extends Component {
       const status = await resume(playbackObj);
       return updateState(this.context, {
         soundObj: status,
+        isPlaying:true,
       })
     }
 
     //playAnother
     if (soundObj.isLoaded && currentAudio.id !== audio.id ){
       const status = await  playAnother(playbackObj, audio.uri);
+      const index = audioFiles.indexOf(audio);
+
       return updateState(this.context, {
         soundObj: status,
-        currentAudio: audio
+        currentAudio: audio,
+        isPlaying: true,
+        currentAudioIndex: index,
       });
     }
   }
 
-  rowRenderer = (type, item) => {
+  rowRenderer = (type, item, index, extendedState) => {
     return <AudioListItem 
       onAudioPress={ () => this.handleAudioPress(item)}
       title={item.filename} 
-      duration={item.duration} 
+      isPlaying={extendedState.isPlaying}
+      duration={item.duration}
+      isActive={this.context.currentAudioIndex === index} 
       onOptionPress={() => {
           this.currentItem = item;
           this.setState({...this.state, optionModalVisibility: true});
@@ -92,12 +111,13 @@ class AudioList extends Component {
   render() {
     return (
         <AudioContext.Consumer>
-          {({dataProvider}) => {
+          {({dataProvider, isPlaying}) => {
               return (
               <Screen>
                 <RecyclerListView   dataProvider={dataProvider} 
                                     layoutProvider={this.layoutProvider}
-                                    rowRenderer={this.rowRenderer}>
+                                    rowRenderer={this.rowRenderer}
+                                    extendedState={{isPlaying}}>
                 </RecyclerListView>
                 <OptionModal 
                     onPlayPress={() => console.log('Playing')}
