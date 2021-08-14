@@ -25,11 +25,36 @@ class AudioList extends Component {
     
   })
 
-  onPlaybackStatusUpdate = playbackStatus => {
+  onPlaybackStatusUpdate = async playbackStatus => {
     if(playbackStatus.isLoaded && playbackStatus.isPlaying){
       this.context.updateState(this.context, {
         playbackDuration: playbackStatus.durationMillis,
         playbackPosition: playbackStatus.positionMillis,
+      });
+    }
+
+    if(playbackStatus.didJustFinish) {
+      const nextAudioIndex = this.context.currentAudioIndex + 1;
+      //no audio to play
+      if(nextAudioIndex >= this.context.totalAudioCount){
+        this.context.playbackObj.unloadAsync();
+        return this.context.updateState(this.context,{
+          soundObj:null,
+          currentAudio: this.context.audioFiles[0],
+          isPlaying: false,
+          currentAudioIndex: [0],
+          playbackPosition: null,
+          playbackDuration: null,
+        })
+      }
+      const audio = this.context.audioFiles[nextAudioIndex];
+
+      const status = await playAnother(this.context.playbackObj, audio.uri);
+      this.context.updateState(this.context,{
+        soundObj:status,
+        currentAudio: audio,
+        isPlaying: true,
+        currentAudioIndex: nextAudioIndex,
       })
     }
   }
@@ -39,7 +64,7 @@ class AudioList extends Component {
 
     //play
     if(soundObj === null){
-      const playbackObj = new Audio.Sound();
+      // const playbackObj = new Audio.Sound();
       const status = await play(playbackObj, audio.uri);
       const index = audioFiles.indexOf(audio);
 
@@ -50,7 +75,7 @@ class AudioList extends Component {
         isPlaying:true,
         currentAudioIndex: index,
       });
-      playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)
+      return playbackObj.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate)
     }
 
     //pause

@@ -1,7 +1,8 @@
 import React, {Component, createContext} from 'react';
 import { Text, View, Alert } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
-import { DataProvider } from 'recyclerlistview'
+import { DataProvider } from 'recyclerlistview';
+import { Audio } from 'expo-av';
 
 export const AudioContext = createContext()
 
@@ -82,8 +83,12 @@ export class AudioProvider extends Component {
         }
     }
 
+    //componentDidMount
     componentDidMount(){
-        this.getPermission()
+        this.getPermission();
+        if(this.state.playbackObj === null){
+            this.setState({...this.state, playbackObj: new Audio.Sound()})
+        }
     }
 
     updateState = (prevState, newState ={}) =>  {
