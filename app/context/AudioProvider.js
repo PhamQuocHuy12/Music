@@ -84,11 +84,20 @@ export class AudioProvider extends Component {
     }
 
     //componentDidMount
-    componentDidMount(){
+    async componentDidMount(){
         this.getPermission();
         if(this.state.playbackObj === null){
             this.setState({...this.state, playbackObj: new Audio.Sound()})
         }
+        await Audio.setAudioModeAsync({
+            staysActiveInBackground: true,
+            interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+            shouldDuckAndroid: true,
+            playThroughEarpieceAndroid: true,
+            allowsRecordingIOS: true,
+            interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+            playsInSilentModeIOS: true,
+          });
     }
 
     updateState = (prevState, newState ={}) =>  {

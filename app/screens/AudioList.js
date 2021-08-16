@@ -64,7 +64,6 @@ class AudioList extends Component {
 
     //play
     if(soundObj === null){
-      // const playbackObj = new Audio.Sound();
       const status = await play(playbackObj, audio.uri);
       const index = audioFiles.indexOf(audio);
 
